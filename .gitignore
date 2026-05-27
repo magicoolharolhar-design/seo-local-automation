@@ -11,6 +11,7 @@ __pycache__/
 .env
 .env.local
 .env.*
+!.env.example
 
 # Logs
 *.log
@@ -39,8 +40,9 @@ build/
 .idea/
 
 # Data files (if not meant to be tracked)
-data/input/
+data/input/*
 !data/input/.gitkeep
-data/output/
+!data/input/example_input.csv
+data/output/*
 !data/output/.gitkeep
 ```
