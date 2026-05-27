@@ -1,71 +1,115 @@
 # Google Business Profile SEO Automation
 
-Automação profissional em Python para geração de conteúdo SEO para Google Meu Negócio.
+Automação profissional em Python para geração de conteúdo SEO para Google Meu Negócio, com interface web SaaS.
 
 ## Funcionalidades
 
 - Leitura de empresas a partir de arquivo CSV
-- Geração automática de descrições SEO otimizadas
+- Geração automática de descrições SEO otimizadas (via OpenAI)
 - Criação de FAQs relevantes para cada negócio
 - Geração de posts para Google Business Profile
 - Exportação de todos os conteúdos gerados para CSV
-
-## Requisitos
-
-- Python 3.8+
-- pandas
-- openai
-- python-dotenv
-
-## Instalação
-
-1. Clone o repositório
-2. Instale as dependências:
-```bash
-pip install -r requirements.txt
-```
-
-3. Configure suas variáveis de ambiente:
-   - Copie o arquivo `.env.example` para `.env`
-   - Adicione sua API Key da OpenAI
-
-## Uso
-
-1. Prepare seu arquivo CSV com as informações das empresas (veja `data/input/example_input.csv`)
-2. Execute a automação:
-```bash
-python main.py
-```
-
-3. Os resultados serão exportados para `data/output/generated_content.csv`
+- Interface web moderna com dashboard, upload, resultados e histórico
+- Geração individual ou em lote
 
 ## Estrutura do Projeto
 
 ```
-├── src/
-│   ├── __init__.py
-│   ├── config.py          # Configurações do projeto
-│   ├── csv_handler.py     # Leitura e escrita de CSV
-│   ├── content_generator.py # Geração de conteúdo com IA
-│   └── models.py          # Modelos de dados
-├── data/
-│   ├── input/             # CSVs de entrada
-│   └── output/            # CSVs de saída
-├── .env                   # Variáveis de ambiente
-├── .env.example           # Exemplo de variáveis de ambiente
-├── main.py                # Ponto de entrada principal
-├── requirements.txt       # Dependências do projeto
-└── README.md              # Este arquivo
+├── backend/                 # API FastAPI
+│   ├── app/
+│   │   ├── main.py          # Servidor FastAPI
+│   │   ├── routers/api.py   # Endpoints da API
+│   │   ├── schemas.py       # Schemas Pydantic
+│   │   └── seo/             # Módulo de automação SEO
+│   ├── data/
+│   ├── requirements.txt
+│   └── render.yaml          # Config para deploy no Render
+├── frontend/                # Interface React + Vite + Tailwind
+│   ├── src/
+│   │   ├── pages/           # Páginas do app
+│   │   ├── components/      # Componentes (shadcn/ui)
+│   │   └── lib/api.js       # Cliente HTTP
+│   ├── netlify.toml         # Config para deploy no Netlify
+│   └── package.json
+├── src/                     # CLI original
+├── main.py                  # CLI original
+├── tests/                   # Testes unitários
+└── README.md
+```
+
+## Execução Local
+
+### 1. Backend (API)
+
+```bash
+cd backend
+pip install -r requirements.txt
+cp .env.example .env   # Edite com sua OPENAI_API_KEY
+uvicorn app.main:app --reload --port 8000
+```
+
+A API ficará em `http://localhost:8000`. Documentação interativa em `http://localhost:8000/docs`.
+
+### 2. Frontend (React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend será aberto em `http://localhost:5173` e fará proxy das requisições `/api` para o backend.
+
+> **Importante:** Inicie o backend primeiro, depois o frontend.
+
+### 3. CLI Original
+
+```bash
+pip install -r requirements.txt
+python main.py --create-sample   # Cria CSV de exemplo
+python main.py                   # Executa automação
 ```
 
 ## Formato do CSV de Entrada
 
-O arquivo CSV deve conter as seguintes colunas:
-- `nome_empresa`: Nome da empresa
-- `segmento`: Segmento de atuação
-- `cidade`: Cidade onde atua
-- `diferenciais`: Diferenciais da empresa (opcional)
-- `publico_alvo`: Público-alvo (opcional)
+| Coluna | Descrição | Obrigatório |
+|--------|-----------|-------------|
+| `nome_empresa` | Nome da empresa | Sim |
+| `segmento` | Segmento de atuação | Sim |
+| `cidade` | Cidade onde atua | Sim |
+| `diferenciais` | Diferenciais da empresa | Não |
+| `publico_alvo` | Público-alvo | Não |
+
+## API Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/health` | Health check |
+| POST | `/api/upload-csv` | Upload de CSV |
+| GET | `/api/uploaded-files` | Lista arquivos enviados |
+| POST | `/api/preview-csv` | Pré-visualiza CSV |
+| POST | `/api/generate` | Gera conteúdo individual |
+| POST | `/api/generate-all` | Gera conteúdo em lote |
+| GET | `/api/download/{file}` | Download de CSV |
+| GET | `/api/history` | Histórico de gerações |
+| GET/POST | `/api/settings` | Configurações da API |
+
+## Deploy
+
+### Frontend → Netlify
+
+Conecte o repositório no Netlify e configure:
+- **Build command:** `cd frontend && npm install && npm run build`
+- **Publish directory:** `frontend/dist`
+- **Redirects:** já configurados no `netlify.toml`
+
+### Backend → Render
+
+1. Crie um Web Service no Render
+2. **Build Command:** `pip install -r backend/requirements.txt`
+3. **Start Command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+4. Adicione a variável de ambiente `OPENAI_API_KEY`
+5. Atualize o `netlify.toml` com a URL do seu Render
 
 ## Licença
 
